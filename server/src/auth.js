@@ -28,4 +28,30 @@ router.post("/register", async (req, res) => {
   }
 });
 
+router.post("/login", async (req, res) => {
+  const username = req.body?.username;
+  const password = req.body?.password;
+  try {
+    if (username && password) {
+      const user = await User.findOne({ username: username }).select(
+        "+passwordHash",
+      );
+      if (!user) {
+        res.status(401).json({ message: "invalid username or password." });
+        return;
+      }
+      const isValidLogin = await bcrypt.compare(password, user.passwordHash);
+      if (isValidLogin) {
+        res.status(200).json({ message: "Logged in successfully." });
+      } else {
+        res.status(401).json({ message: "invalid username or password." });
+      }
+    } else {
+      res.status(400).json({ message: "invalid username or password." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong." });
+    console.log(error);
+  }
+});
 module.exports = router;
